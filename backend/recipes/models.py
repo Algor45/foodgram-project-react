@@ -78,7 +78,7 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(Tag,
                                   through='RecipeTag',
                                   verbose_name='тэг')
-    cooking_time = models.IntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления (в минутах)',
         help_text='Укажите время приготовления (в минутах)')
     pub_date = models.DateTimeField(auto_now_add=True,

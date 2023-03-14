@@ -137,11 +137,6 @@ class RecipeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     f'Не существует тэга: {curr_tag}'
                 )
-        cooking_time = data['cooking_time']
-        if int(cooking_time) <= 0:
-            raise serializers.ValidationError(
-                'Время приготовления не может быть меньше 1.'
-            )
         return data
 
     def validate_ingredients(self, ingredients):
