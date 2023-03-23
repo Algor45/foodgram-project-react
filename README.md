@@ -1,8 +1,6 @@
 ![example workflow](https://github.com/Algor45/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
 
-
-
 ## Описание
 Данный проект является сайтом с рецептами Foodgram.
 
