@@ -1,10 +1,10 @@
 """Write here Admin settings for users app."""
 from django.contrib import admin
-from users.models import Follow, CustomUser
+from users.models import User, Follow
 
 
 class UserAdmin(admin.ModelAdmin):
-    """Настройки администратора для модели CustomUser."""
+    """Настройки администратора для модели User."""
 
     list_display = (
         'id',
@@ -14,7 +14,7 @@ class UserAdmin(admin.ModelAdmin):
         'email',
     )
     search_fields = ('username', 'email', 'last_name')
-    list_filter = ('username', 'email', 'first_name', 'last_name')
+    list_filter = ('username', 'email', 'first_name')
     empty_value_display = '-пусто-'
 
 
@@ -22,13 +22,13 @@ class FollowAdmin(admin.ModelAdmin):
     """Настройки администратора для модели Follow."""
 
     list_display = (
-        'pk',
+        'id',
         'user',
         'following'
     )
     list_filter = ('user', 'following')
-    search_fields = ('user__username', 'user__email')
+    search_fields = ('user', 'following')
 
 
-admin.site.register(CustomUser, UserAdmin)
+admin.site.register(User, UserAdmin)
 admin.site.register(Follow, FollowAdmin)

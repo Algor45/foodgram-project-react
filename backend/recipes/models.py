@@ -15,7 +15,8 @@ class Tag(models.Model):
                             max_length=20)
     color = models.CharField(verbose_name='Цвет',
                              unique=True,
-                             help_text='Укажите цвет в формате #FFFFFF',
+                             default='#00ff7f',
+                             help_text='Укажите цвет в формате HEX',
                              max_length=7)
     slug = models.SlugField(verbose_name='Ссылка',
                             help_text='Укажите уникальную ссылку',
@@ -26,6 +27,7 @@ class Tag(models.Model):
 
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
+        ordering = ('name',)
 
     def __str__(self):
         """Функция __str__ модели Tag."""
@@ -49,6 +51,7 @@ class Ingredient(models.Model):
 
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        ordering = ('id',)
 
     def __str__(self) -> str:
         """Функция __str__ модели Ingredient."""
@@ -64,7 +67,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='posts',
+        related_name='recipe',
         verbose_name='Автор',
         help_text='Укажите автора'
     )
@@ -76,8 +79,8 @@ class Recipe(models.Model):
                                          through='RecipeIngredient',
                                          verbose_name='Ингредиенты')
     tags = models.ManyToManyField(Tag,
-                                  through='RecipeTag',
-                                  verbose_name='тэг')
+                                  verbose_name='тэг',
+                                  related_name='recipes')
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления (в минутах)',
         help_text='Укажите время приготовления (в минутах)')
@@ -101,9 +104,11 @@ class RecipeIngredient(models.Model):
     """Модель для связи моделей Recipe Ingredient."""
 
     recipe = models.ForeignKey(Recipe,
-                               on_delete=models.CASCADE)
+                               on_delete=models.CASCADE,
+                               related_name='recipe')
     ingredient = models.ForeignKey(Ingredient,
-                                   on_delete=models.CASCADE)
+                                   on_delete=models.CASCADE,
+                                   related_name='ingredient')
     amount = models.PositiveIntegerField(
         verbose_name='Количество',
         default=1,
@@ -127,31 +132,6 @@ class RecipeIngredient(models.Model):
                     f' содержится в рецепте {self.reipe.name}')
 
 
-class RecipeTag(models.Model):
-    """Модель для связи моделей Recipe Tag."""
-
-    recipe = models.ForeignKey(Recipe,
-                               verbose_name='рецепт',
-                               on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tag,
-                            verbose_name='тэг',
-                            on_delete=models.CASCADE)
-
-    class Meta:
-        """Meta модели RecipeTag."""
-
-        verbose_name = 'Тэг рецепта'
-        verbose_name_plural = 'Тэги рецепта'
-        constraints = [models.UniqueConstraint
-                       (fields=['recipe', 'tag'],
-                        name='unique_recipe_tag')]
-
-    def __str__(self):
-        """Функция __str__ модели RecipeTag."""
-        return (f'Рецепт {self.recipe.name}'
-                f'помечен тэгом {self.tag.name}')
-
-
 class Cart(models.Model):
     """Модель Cart."""
 
@@ -162,7 +142,7 @@ class Cart(models.Model):
     recipe = models.ForeignKey(Recipe,
                                verbose_name='Рецепт',
                                on_delete=models.CASCADE,
-                               related_name='cart')
+                               related_name='cart_recipe')
 
     class Meta:
         """Meta модели Cart."""
@@ -188,7 +168,7 @@ class Favorite(models.Model):
     recipe = models.ForeignKey(Recipe,
                                verbose_name='Рецепт',
                                on_delete=models.CASCADE,
-                               related_name='favorite')
+                               related_name='favorite_recipe')
 
     class Meta:
         """Meta модели Favorite."""

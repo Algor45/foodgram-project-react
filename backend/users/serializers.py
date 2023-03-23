@@ -1,20 +1,25 @@
-"""Write your api app serializers here."""
-from rest_framework import serializers
-from recipes.models import Recipe
-from users.models import CustomUser, Follow
-from djoser.serializers import UserCreateSerializer, UserSerializer
+"""Set your users serializers here."""
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
+from djoser.serializers import (UserCreateSerializer,
+                                UserSerializer, PasswordSerializer)
 from drf_extra_fields.fields import Base64ImageField
+from rest_framework import serializers
+from .models import Follow
+from recipes.models import Recipe
+
+User = get_user_model()
 
 
 class UserSerializer(UserSerializer):
-    """Сериалайзер для модели CustomUser."""
+    """Сериалайзер для модели User."""
 
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         """Meta настройки сериалайзера для модели CustomUser."""
 
-        model = CustomUser
+        model = User
         fields = ('id', 'email', 'username',
                   'first_name', 'last_name',
                   'is_subscribed'
@@ -22,10 +27,11 @@ class UserSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         """Метод для получения свойства is_subscribed."""
-        request = self.context.get('request')
-        if request.user.is_authenticated:
-            return Follow.objects.filter(user=request.user,
-                                         following=obj).exists()
+        return (self.context.get('request').user.is_authenticated
+                and Follow.objects.filter(
+                    user=self.context.get('request').user,
+                    following=obj
+        ).exists())
 
 
 class UserCreateSerializer(UserCreateSerializer):
@@ -34,11 +40,34 @@ class UserCreateSerializer(UserCreateSerializer):
     class Meta:
         """Meta настройки сериалайзера для модели создания пользователя."""
 
-        model = CustomUser
+        model = User
         fields = (
-            'id', 'email', 'username', 'first_name',
+            'email', 'username', 'first_name',
             'last_name', 'password'
         )
+        required_fields = (
+            'email', 'username', 'first_name', 'last_name',
+            'password')
+
+
+class SetPasswordSerializer(PasswordSerializer):
+    """Сериалайзер для смены пароля."""
+
+    current_password = serializers.CharField(
+        required=True,
+        label='Текущий пароль')
+
+    def validate(self, data):
+        """Валидация нового пароля."""
+        user = self.context.get('request').user
+        if data['new_password'] == data['current_password']:
+            raise serializers.ValidationError({
+                "new_password": "Пароли не должны совпадать"})
+        check_current = check_password(data['current_password'], user.password)
+        if check_current is False:
+            raise serializers.ValidationError({
+                "current_password": "Введен неверный пароль"})
+        return data
 
 
 class FollowRecipeSerializer(serializers.ModelSerializer):
@@ -56,11 +85,14 @@ class FollowRecipeSerializer(serializers.ModelSerializer):
 class FollowSerializer(serializers.ModelSerializer):
     """Сериалайзер для модели Follow."""
 
-    id = serializers.ReadOnlyField(source='following.id')
-    email = serializers.ReadOnlyField(source='following.email')
-    username = serializers.ReadOnlyField(source='following.username')
-    first_name = serializers.ReadOnlyField(source='following.first_name')
-    last_name = serializers.ReadOnlyField(source='following.last_name')
+    id = serializers.IntegerField(source='following.id', read_only=True)
+    email = serializers.CharField(source='following.email', read_only=True)
+    username = serializers.CharField(source='following.username',
+                                     read_only=True)
+    first_name = serializers.CharField(source='following.first_name',
+                                       read_only=True)
+    last_name = serializers.CharField(source='following.last_name',
+                                      read_only=True)
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.ReadOnlyField(source='following.recipes.count')
@@ -75,22 +107,25 @@ class FollowSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         """Метод для получения свойства is_subscribed."""
         return Follow.objects.filter(
-            user=obj.user,
+            user=self.context.get('request').user,
             following=obj.following
         ).exists()
 
     def get_recipes(self, obj):
         """Метод для получения рецептов."""
-        request = self.context.get('request')
-        limit = request.GET.get('recipes_limit')
-        queryset = Recipe.objects.filter(author=obj.following)
-        if limit:
-            queryset = queryset[:int(limit)]
-        return FollowRecipeSerializer(queryset, many=True).data
+        recipes = obj.following.recipe.all()
+        return FollowRecipeSerializer(
+            recipes,
+            many=True).data
 
     def validate(self, data):
-        """Функция валидации невозможности подписаться на себя."""
-        if data['user'] == data['following']:
+        """Функция валидации подписок."""
+        user = self.context.get('request').user
+        following = self.context.get('following_id')
+        if Follow.objects.filter(user=user, following=following).exists():
+            raise serializers.ValidationError({
+                'errors': 'Вы уже подписаны на данного пользователя'})
+        if user.id == int(following):
             raise serializers.ValidationError(
                 'Невозможно подписаться на себя самого!')
         return data

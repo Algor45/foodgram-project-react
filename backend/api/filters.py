@@ -1,6 +1,9 @@
 """Write your api app filters here."""
 import django_filters
-from recipes.models import Ingredient, Recipe
+from django.contrib.auth import get_user_model
+from recipes.models import Ingredient, Recipe, Tag
+
+User = get_user_model()
 
 
 class IngredientFilter(django_filters.FilterSet):
@@ -18,12 +21,17 @@ class IngredientFilter(django_filters.FilterSet):
 class RecipeFilter(django_filters.FilterSet):
     """Фильтр для RecipeViewSet."""
 
-    tags = django_filters.filters.AllValuesMultipleFilter(
-        field_name='tags__slug')
+    author = django_filters.ModelChoiceFilter(
+        queryset=User.objects.all(),
+    )
+    tags = django_filters.filters.ModelMultipleChoiceFilter(
+        queryset=Tag.objects.all(),
+        field_name='tags__slug',
+        to_field_name='slug',)
     is_favorited = django_filters.filters.BooleanFilter(
-        method='filter_is_favorited')
+        method='get_is_favorited')
     is_in_shopping_cart = django_filters.filters.BooleanFilter(
-        method='filter_is_in_shopping_cart'
+        method='get_is_in_shopping_cart'
     )
 
     class Meta:
@@ -32,14 +40,16 @@ class RecipeFilter(django_filters.FilterSet):
         model = Recipe
         fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
 
-    def filter_is_favorited(self, queryset, name, value):
-        """Фильтр метод is_favorited для RecipeViewSet."""
-        if value:
-            return queryset.filter(favorite__user=self.request.user)
+    def get_is_favorited(self, queryset, name, value):
+        """get метод is_favorited для RecipeViewSet."""
+        user = self.request.user
+        if value and user.is_authenticated:
+            return queryset.filter(favorite__user=user)
         return queryset
 
-    def filter_is_in_shopping_cart(self, queryset, name, value):
-        """Фильтр метод is_in_shopping_cart для RecipeViewSet."""
-        if value:
-            return queryset.filter(shoppingcart__user=self.request.user)
+    def get_is_in_shopping_cart(self, queryset, name, value):
+        """get метод is_in_shopping_cart для RecipeViewSet."""
+        user = self.request.user
+        if value and user.is_authenticated:
+            return queryset.filter(recipe_cart__user=user)
         return queryset

@@ -1,9 +1,10 @@
 """Set your Posts models here."""
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     """Кастомная модель пользователя."""
 
     username = models.CharField(
@@ -29,15 +30,11 @@ class CustomUser(AbstractUser):
         blank=True,
         verbose_name='Фамилия'
     )
-    password = models.CharField(max_length=150,
-                                verbose_name='Пароль')
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username',)
 
     class Meta:
         """Meta модели CustomUser."""
 
-        ordering = ['id']
+        ordering = ['username']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
@@ -50,16 +47,16 @@ class Follow(models.Model):
     """Модель подписок."""
 
     user = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='follower',
         verbose_name='Подписчик',
     )
     following = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='following',
-        verbose_name='Следят',
+        verbose_name='Автор',
     )
 
     class Meta:
@@ -68,4 +65,4 @@ class Follow(models.Model):
         ordering = ['id']
         constraints = [
             models.UniqueConstraint(fields=['user', 'following'],
-                                    name='unique_user_following')]
+                                    name='unique_follow')]
