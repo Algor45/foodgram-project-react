@@ -1,3 +1,8 @@
+![example workflow](https://github.com/Algor45/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
+
+
+
+
 ## Описание
 Данный проект является сайтом с рецептами Foodgram.
 
@@ -10,55 +15,71 @@
 Авторизованный пользователь может изменять только свои рецепты.
 
 
+## Технологии:
+Проект создан средствами Python, DgangoORM и Dgango REST Framework.
+Аутентификация в проекте построена на simple_jwt.
+Подключены Gunicorn и Nginx.
+Проект запакован в контейнер средствами Docker.
+
 ## Как запустить проект:
 
-Клонировать репозиторий и перейти в него в командной строке:
+Клонировать репозиторий:
 
 ```
 git clone https://github.com/Algor45/foodgram-project-react.git
 ```
 
-```
-cd foodgram-project-react/
-```
-
-Cоздать и активировать виртуальное окружение:
+Перейти в папку infra:
 
 ```
-py -3.7 -m venv env
+cd infra/
 ```
 
-```
-source venv/bin/activate
-```
-
-Установить зависимости из файла requirements.txt:
+Создать .env файл и заполнить его по шаблону:
 
 ```
-py -m pip install --upgrade pip
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=<название базы данных>
+POSTGRES_USER=<имя пользователя базы данных>
+POSTGRES_PASSWORD=<пароль базы данных>
+DB_HOST=db
+DB_PORT=<порт>(по умолчанию = 5432)
 ```
 
-```
-pip install -r requirements.txt
-```
+В этой же папке выполнить команду развертывания проекта:
 
-
-Перейти в папку, в которой находится файл manage.py:
 ```
-cd backend/
+docker-compose up
 ```
 
 Выполнить миграции:
+```
+docker-compose exec backend python manage.py migrate
+```
+
+Создать суперпользователя:
+```
+docker-compose exec backend python manage.py createsuperuser
+```
+
+Подключить статику:
+```
+docker-compose exec backend python manage.py collectstatic --no-input
+```
+
+
+Проект станет доступен по адресу:
 
 ```
-python manage.py migrate
+http://localhost/
 ```
 
-Запустить проект:
+Для остановки проекта выполните команду:
 
 ```
-python manage.py runserver
+docker-compose stop
 ```
+Или воспользуйтесь комбинацией клавиш Ctrl+C в терминале с запущенным докером.
 
 
 #### (Опционально) Заполнение БД.
@@ -69,9 +90,9 @@ python manage.py runserver
 Чтобы залить данные в базу необходимо выполнить комманду:
 
 ```
-python manage.py ingredients_csv_to_db
+docker-compose exec backend python manage.py ingredients_csv_to_db
 
-python manage.py tags_csv_to_db
+docker-compose exec backend python manage.py tags_csv_to_db
 ```
 
 ## Системные требования
