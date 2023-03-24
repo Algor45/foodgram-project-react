@@ -19,6 +19,7 @@
 Подключены Gunicorn и Nginx.
 Проект запакован в контейнер средствами Docker.
 
+
 ## Как запустить проект:
 
 Клонировать репозиторий:
@@ -93,6 +94,7 @@ docker-compose exec backend python manage.py ingredients_csv_to_db
 docker-compose exec backend python manage.py tags_csv_to_db
 ```
 
+
 ## Системные требования
 
 Версия Python:
@@ -106,6 +108,7 @@ Python 3.7
 ```
 Зависимости указаны в файле requirements.txt .
 ```
+
 
 ## Примеры
 ### Создание нового пользователя.
