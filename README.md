@@ -1,14 +1,6 @@
 ![example workflow](https://github.com/Algor45/foodgram-project-react/actions/workflows/foodgram_workflow.yml/badge.svg)
 
 
-Данные для входа в админку.
-Логин: admin
-Пароль: admin
-email: admin@admin.com
-
-Ip-адрес: 84.201.157.70
-
-
 ## Описание
 Данный проект является сайтом с рецептами Foodgram.
 
